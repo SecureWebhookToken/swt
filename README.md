@@ -1,12 +1,9 @@
 # SecureWebhookToken (SWT)
 
 ![GitHub Tag](https://img.shields.io/github/v/tag/SecureWebhookToken/swt?label=Version)
-
 ![Go Report Card](https://goreportcard.com/badge/github.com/SecureWebhookToken/swt)
-
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/SecureWebhookToken/swt?style=flat)
 ![Coverage](assets/coverage-badge.svg)
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/SecureWebhookToken/swt)](https://pkg.go.dev/github.com/SecureWebhookToken/swt)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
