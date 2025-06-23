@@ -1,7 +1,5 @@
 # SecureWebhookToken (SWT)
 
-# SecureWebhookToken (SWT)
-
 ![GitHub Tag](https://img.shields.io/github/v/tag/SecureWebhookToken/swt?label=Version)
 [![Go Report Card](https://goreportcard.com/badge/github.com/SecureWebhookToken/swt)](https://goreportcard.com/report/github.com/SecureWebhookToken/swt)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/SecureWebhookToken/swt?style=flat)
@@ -11,7 +9,7 @@
 
 SecureWebhookToken is an [Internet-Draft](https://datatracker.ietf.org/doc/draft-knauer-secure-webhook-token/)
 for sending secure Webhooks, based on the [JWT](https://datatracker.ietf.org/doc/html/rfc7519) standard.
-See [Secure Webhook Tokenproject page](https://securewebhooktoken.github.io) for more details.
+See [Documentation](https://securewebhooktoken.github.io) for more details.
 
 # Install
 `go get github.com/SecureWebhookToken/swt`
