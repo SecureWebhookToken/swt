@@ -80,7 +80,7 @@ benchmark: ## Run benchmark tests
 	@go test -cpu 1,2,4,8,12 -benchmem -bench . benchmark_test.go
 
 .PHONY: update
-update: update-internal lint test ## Update all dependencies and refresh vendor folder
+update: update-internal lint test coverage ## Update all dependencies
 
 .PHONY: update-internal
 update-internal:
