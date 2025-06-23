@@ -8,12 +8,14 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
+// Request represents a webhook request configuration for creating SecureWebhookTokens.
+// It contains all the necessary information to build HTTP requests with embedded tokens.
 type Request struct {
-	URL     string
-	Issuer  string
-	Event   string
-	HashAlg string
-	Data    []byte
+	URL     string // Target URL for the webhook request
+	Issuer  string // JWT issuer claim (iss) - typically the service sending the webhook
+	Event   string // Event name following EVENT_NAME.ACTIVITY format (e.g., "user.created")
+	HashAlg string // Hash algorithm for POST requests (SHA-256, SHA3-256, etc.). Defaults to SHA3-256 if empty
+	Data    []byte // Payload data to be sent with the request
 }
 
 // Build can be used to create an http.Request for creating and sending a SecureWebhookToken via HEAD or POST request,
@@ -35,7 +37,7 @@ func (r *Request) BuildHead(key any, opts ...Option) (*http.Request, error) {
 		err    error
 	)
 
-	if r.Data != nil && !isValidJSON(r.Data) {
+	if r.Data != nil && !json.Valid(r.Data) {
 		return nil, ErrInvalidJSON
 	}
 
@@ -95,9 +97,4 @@ func (r *Request) BuildPost(key any, opts ...Option) (*http.Request, error) {
 	}
 
 	return req, nil
-}
-
-// isValidJSON returns true only if data can be successfully unmarshalled into a map[string]any.
-func isValidJSON(data []byte) bool {
-	return json.Unmarshal(data, &map[string]any{}) == nil
 }
