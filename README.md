@@ -39,7 +39,14 @@ var secretKey = []byte("test")
 func main() {
 	go startServer()
 
-	req, err := swt.BuildRequest(url, "issuer", "send.stars", []byte(`{"username": "me", "stars": "567"}`), secretKey)
+	swtReq := swt.Request{
+		URL:    url,
+		Issuer: "issuer",
+		Event:  "send.stars",
+		Data:   []byte(`{"username": "me", "stars": "567"}`),
+	}
+
+	req, err := swtReq.Build(secretKey)
 	if err != nil {
 		slog.Error(fmt.Errorf("error building request: %w", err).Error())
 		return
@@ -57,6 +64,12 @@ func main() {
 func startServer() {
 	http.Handle("/webhook", swt.NewHandlerFunc(secretKey, func(token *swt.SecureWebhookToken) error {
 		slog.Info("Successfully received token: " + token.String())
+
+		//Validate issuer
+		if token.Issuer() != issuer {
+			return fmt.Errorf("invalid issuer")
+		}
+
 		return nil
 	}, nil))
 
