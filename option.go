@@ -28,7 +28,7 @@ func WithNotBefore(t time.Time) Option {
 	}
 }
 
-// WithID overrides the jti claim to the given id which must be a valid UUID to be verified as SecureWebhookToken.
+// WithID overrides the jti claim with a given id. Should be a UUID or similar unique id.
 func WithID(id string) Option {
 	return func(swt *SecureWebhookToken) {
 		swt.Claims().wc().ID = id

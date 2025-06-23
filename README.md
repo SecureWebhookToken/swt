@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 SecureWebhookToken is an [Internet-Draft](https://datatracker.ietf.org/doc/draft-knauer-secure-webhook-token/)
-for sending secure Webhooks, based on the [JWT](https://datatracker.ietf.org/doc/html/rfc7519) standard.
+for sending secure Webhooks, based on the [JWT](https://datatracker.ietf.org/doc/html/rfc7519) standard. See [project page](https://securewebhooktoken.github.io) for more details.
 
 # Install
 `go get github.com/SecureWebhookToken/swt`
@@ -54,7 +54,7 @@ func main() {
 }
 
 func startServer() {
-	http.Handle("/webhook", swt.NewHandlerFunc(issuer, secretKey, func(token *swt.SecureWebhookToken) error {
+	http.Handle("/webhook", swt.NewHandlerFunc(secretKey, func(token *swt.SecureWebhookToken) error {
 		slog.Info("Successfully received token: " + token.String())
 		return nil
 	}, nil))

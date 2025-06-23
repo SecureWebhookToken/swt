@@ -34,6 +34,7 @@ const (
 )
 
 var (
+	ErrInvalidToken             = errors.New("invalid token - please use New or NewWithClaims to properly initialize token")
 	ErrMissingClaims            = errors.New("missing claims")
 	ErrInvalidOption            = errors.New("invalid option")
 	ErrInvalidJSON              = errors.New("invalid json data")
@@ -155,7 +156,12 @@ func NewHandlerFunc(secret []byte, handleFn func(*SecureWebhookToken) error, opt
 				return
 			}
 
-			_ = json.Unmarshal(rawData, &whData)
+			err = json.Unmarshal(rawData, &whData)
+			if err != nil {
+				logger.Error("failed to parse webhook data", "error", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
 			if whData.Size != r.ContentLength {
 				logger.Error(fmt.Sprintf("wrong body size! expect content length of %d but got %d", whData.Size, r.ContentLength))
@@ -244,14 +250,18 @@ type SecureWebhookToken struct {
 
 // Algorithm returns the used SigningMethod algorithm.
 func (swt *SecureWebhookToken) Algorithm() string {
-	swt.handleMissingToken()
+	if swt.token == nil {
+		panic(ErrInvalidToken)
+	}
 	return swt.token.Method.Alg()
 }
 
 // Claims return all token Claims.
 // If no custom WebhookClaims have been set with NewWithClaims(), then the underlying type will be *WebhookClaims.
 func (swt *SecureWebhookToken) Claims() Claims {
-	swt.handleMissingToken()
+	if swt.token == nil {
+		panic(ErrInvalidToken)
+	}
 	return swt.token.Claims.(Claims)
 }
 
@@ -272,7 +282,10 @@ func (swt *SecureWebhookToken) Webhook() Webhook {
 
 // SignedString returns the encoded and signed SecureWebhookToken as a JWT string.
 func (swt *SecureWebhookToken) SignedString(key any) (string, error) {
-	swt.handleMissingToken()
+	if swt.token == nil {
+		return "", ErrInvalidToken
+	}
+
 	// Validate claims before signing
 	if err := swt.Validate(); err != nil {
 		return "", err
@@ -283,7 +296,9 @@ func (swt *SecureWebhookToken) SignedString(key any) (string, error) {
 // Valid returns true only if the SecureWebhookToken has been created
 // via Parse method and successfully been validated.
 func (swt *SecureWebhookToken) Valid() bool {
-	swt.handleMissingToken()
+	if swt.token == nil {
+		return false
+	}
 	return swt.token.Valid
 }
 
@@ -316,14 +331,6 @@ func (swt *SecureWebhookToken) String() string {
 	)
 
 	return string(out)
-}
-
-// handleMissingToken initializes the token field if a *SecureWebhookToken was used directly
-// without correct initialization via New() or NewWithClaims().
-func (swt *SecureWebhookToken) handleMissingToken() {
-	if swt.token == nil {
-		swt.token = &jwt.Token{}
-	}
 }
 
 type Webhook struct {
