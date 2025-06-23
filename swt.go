@@ -39,6 +39,7 @@ var (
 	ErrInvalidOption            = errors.New("invalid option")
 	ErrInvalidJSON              = errors.New("invalid json data")
 	ErrInvalidData              = errors.New("invalid data")
+	ErrInvalidTokenHandler      = errors.New("invalid token handler function")
 	ErrUnsupportedHashAlgorithm = errors.New("unsupported hash algorithm")
 
 	// validSigningMethods defines the allowed symmetrical HMAC-SHA signing methods.
@@ -111,7 +112,7 @@ func NewHandlerFunc(secret []byte, handleFn func(*SecureWebhookToken) error, opt
 	)
 
 	if handleFn == nil {
-		panic("valid handler function is required")
+		panic(ErrInvalidTokenHandler)
 	}
 
 	if opts == nil {
