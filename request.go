@@ -8,36 +8,45 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
-// BuildRequest can be used to create an http.Request for sending a SecureWebhookToken via HEAD or POST request,
-// depending on the size and value of the provided data.
-func BuildRequest(url, issuer, event string, data []byte, key any) (*http.Request, error) {
-	if len(data) <= HeadMaxDataSize {
-		return BuildHeadRequest(url, issuer, event, data, key)
-	}
-	return BuildPostRequest(url, issuer, event, data, key)
+type Request struct {
+	URL     string
+	Issuer  string
+	Event   string
+	HashAlg string
+	Data    []byte
 }
 
-// BuildHeadRequest creates an http.Request with http.MethodHead independently of data length.
+// Build can be used to create an http.Request for creating and sending a SecureWebhookToken via HEAD or POST request,
+// depending on the size and value of the provided data.
+func (r *Request) Build(key any, opts ...Option) (*http.Request, error) {
+	if len(r.Data) <= HeadMaxDataSize {
+		return r.BuildHead(key, opts...)
+	}
+	return r.BuildPost(key, opts...)
+}
+
+// BuildHead creates an http.Request with http.MethodHead independently of data length.
 // Should only be used if you've good reasons not to stick to the suggested HeadMaxDataSize as
 // depicted in the SecureWebhookToken draft.
-func BuildHeadRequest(url, issuer, event string, data []byte, key any) (*http.Request, error) {
+func (r *Request) BuildHead(key any, opts ...Option) (*http.Request, error) {
 	var (
 		claims WebhookClaims
 		req    *http.Request
 		err    error
 	)
 
-	if data != nil && !isValidJson(data) {
+	if r.Data != nil && !isValidJSON(r.Data) {
 		return nil, ErrInvalidJSON
 	}
-	claims = NewWebhookClaims(issuer, event, data)
 
-	swt := NewWithClaims(&claims)
+	claims = NewWebhookClaims(r.Issuer, r.Event, r.Data)
+	swt := NewWithClaims(&claims, opts...)
 	tokenStr, err := swt.SignedString(key)
 	if err != nil {
 		return nil, err
 	}
-	req, err = http.NewRequest(http.MethodHead, url, nil)
+
+	req, err = http.NewRequest(http.MethodHead, r.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -46,39 +55,39 @@ func BuildHeadRequest(url, issuer, event string, data []byte, key any) (*http.Re
 	return req, nil
 }
 
-// BuildPostRequest creates an http.Request with http.MethodPost independently of data length.
-// Can be used e.g., when sending a SecureWebhookToken with data of a type which differs
+// BuildPost creates an http.Request with http.MethodPost independently of data length.
+// Can be used e.g., when creating and sending a SecureWebhookToken with data of a type which differs
 // from JSON or a data size less than the HeadMaxDataSize.
-func BuildPostRequest(url, issuer, event string, data []byte, key any) (*http.Request, error) {
+func (r *Request) BuildPost(key any, opts ...Option) (*http.Request, error) {
 	var (
 		claims WebhookClaims
 		req    *http.Request
 		err    error
 	)
 
-	hash, err := HashSum(SHA3_256, data)
+	hash, err := HashSum(r.HashAlg, r.Data)
 	if err != nil {
 		return nil, err
 	}
-	claims = NewWebhookClaims(issuer, event, WebhookData{
+	claims = NewWebhookClaims(r.Issuer, r.Event, WebhookData{
 		Hash:    hash,
-		HashAlg: SHA3_256,
-		Size:    int64(len(data)),
+		HashAlg: r.HashAlg,
+		Size:    int64(len(r.Data)),
 	})
 
-	swt := NewWithClaims(&claims)
+	swt := NewWithClaims(&claims, opts...)
 	tokenStr, err := swt.SignedString(key)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err = http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	req, err = http.NewRequest(http.MethodPost, r.URL, bytes.NewReader(r.Data))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+tokenStr)
 
-	mType := mimetype.Detect(data)
+	mType := mimetype.Detect(r.Data)
 	if mType != nil {
 		req.Header.Set("Content-Type", mType.String())
 	} else {
@@ -88,7 +97,7 @@ func BuildPostRequest(url, issuer, event string, data []byte, key any) (*http.Re
 	return req, nil
 }
 
-// isValidJson returns true only if data can be successfully unmarshalled into a map[string]any.
-func isValidJson(data []byte) bool {
+// isValidJSON returns true only if data can be successfully unmarshalled into a map[string]any.
+func isValidJSON(data []byte) bool {
 	return json.Unmarshal(data, &map[string]any{}) == nil
 }

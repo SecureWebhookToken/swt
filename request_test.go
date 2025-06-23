@@ -82,7 +82,13 @@ func TestBuildRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := swt.BuildRequest(tt.url, tt.issuer, tt.event, tt.data, tt.key)
+			req := swt.Request{
+				URL:    tt.url,
+				Issuer: tt.issuer,
+				Event:  tt.event,
+				Data:   tt.data,
+			}
+			got, err := req.Build(tt.key)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
