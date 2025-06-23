@@ -76,6 +76,11 @@ func NewWithClaims(c Claims, opts ...Option) *SecureWebhookToken {
 		swt.token.Method = jwt.SigningMethodHS256
 	}
 
+	// Disallow "none" JWT signing algorithm.
+	if swt.token.Method.Alg() == "none" {
+		panic(jwt.NoneSignatureTypeDisallowedError)
+	}
+
 	// Create the JWT
 	swt.token = jwt.NewWithClaims(swt.token.Method, swt.token.Claims)
 	return swt
